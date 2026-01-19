@@ -22,19 +22,20 @@ router.get('/popular', async (req, res) => {
 // -------------------
 router.get('/category/:category', async (req, res) => {
   const { category } = req.params;
-  const validCategories = ['popular', 'top_rated', 'upcoming'];
-  if (!validCategories.includes(category))
-    return res.status(400).json({ error: 'Invalid category' });
+  const page = req.query.page || 1;
 
   try {
-    const data = await tmdb(`/movie/${category}?language=en-US`);
-    if (!data || !data.results) return res.status(500).json({ error: 'No data from TMDB' });
-    res.json(data.results);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch movies by category' });
+    const data = await tmdb(
+      `/movie/${category}?language=en-US&page=${page}`
+    );
+
+    res.json(data?.results || []);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json([]);
   }
 });
+
 
 // -------------------
 // Specific movie extra routes (must be before /:id)
