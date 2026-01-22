@@ -15,7 +15,7 @@ export const register = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id',
+      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id',
       [name, email, hashed]
     );
 
@@ -61,3 +61,4 @@ export const login = async (req, res) => {
     res.status(500).json({ message: 'login error' });
   }
 };
+
