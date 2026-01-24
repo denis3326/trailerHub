@@ -4,6 +4,38 @@ import { tmdb } from '../services/tmdb.js';
 const router = express.Router();
 
 // -------------------
+// SEARCH MOVIES - מוסיפים את החיפוש כאן
+// -------------------
+router.get('/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim() === '') {
+      return res.status(400).json({ 
+        error: 'Query parameter is required' 
+      });
+    }
+    
+    // חיפוש סרטים ב-TMDB
+    const data = await tmdb(
+      `/search/movie?query=${encodeURIComponent(query)}&language=en-US&page=1&include_adult=false`
+    );
+    
+    if (!data || !data.results) {
+      return res.status(500).json({ error: 'No data from TMDB' });
+    }
+    
+    res.json(data.results);
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ 
+      error: 'Failed to search movies',
+      details: err.message 
+    });
+  }
+});
+
+// -------------------
 // Popular movies
 // -------------------
 router.get('/popular', async (req, res) => {
@@ -23,6 +55,12 @@ router.get('/popular', async (req, res) => {
 router.get('/category/:category', async (req, res) => {
   const { category } = req.params;
   const page = req.query.page || 1;
+
+  // וידוא שהקטגוריה תקינה
+  const validCategories = ['popular', 'top_rated', 'upcoming', 'now_playing'];
+  if (!validCategories.includes(category)) {
+    return res.status(400).json({ error: 'Invalid category' });
+  }
 
   try {
     const data = await tmdb(
@@ -88,7 +126,5 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch movie' });
   }
 });
-
-
 
 export default router;
