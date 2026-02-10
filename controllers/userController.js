@@ -7,6 +7,7 @@ const verifyToken = (token) => {
   try {
     return jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
+    console.log('Token verification error:', error.message);
     return null;
   }
 };
@@ -17,6 +18,8 @@ export const getProfile = async (req, res) => {
     // קבלת ה-token מה-header
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
+
+    console.log('Profile endpoint called, token exists:', !!token);
 
     if (!token) {
       return res.status(401).json({ 
@@ -35,6 +38,7 @@ export const getProfile = async (req, res) => {
     }
 
     const userId = userData.id;
+    console.log('User ID from token:', userId);
 
     // קבלת נתוני המשתמש מהעמודות הקיימות
     const userRes = await pool.query(
@@ -51,6 +55,7 @@ export const getProfile = async (req, res) => {
     }
 
     const user = userRes.rows[0];
+    console.log('User found in DB:', user);
 
     // מיפוי level מחרוזת למספר
     const levelMapping = {
@@ -77,8 +82,8 @@ export const getProfile = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        level: levelNumber, // מספר לפרונט
-        level_name: user.level, // מחרוזת מהדאטאבייס
+        level: levelNumber,
+        level_name: user.level,
         experience: experience,
         total_score: total_score,
         nominee: nominee,
@@ -92,7 +97,8 @@ export const getProfile = async (req, res) => {
     console.error('Get profile error:', err);
     res.status(500).json({ 
       success: false,
-      message: 'שגיאה בקבלת פרופיל' 
+      message: 'שגיאה בקבלת פרופיל',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 };
@@ -148,46 +154,6 @@ export const updateLevel = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'שגיאה בעדכון רמה'
-    });
-  }
-};
-
-// פונקציה נוספת: קבלת נתוני משתמש לפי ID (ללא token)
-export const getUserById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const userRes = await pool.query(
-      `SELECT id, name, email, level, created_at
-       FROM users WHERE id = $1`,
-      [id]
-    );
-
-    if (userRes.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'משתמש לא נמצא' 
-      });
-    }
-
-    const user = userRes.rows[0];
-
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        level: user.level,
-        created_at: user.created_at
-      }
-    });
-
-  } catch (err) {
-    console.error('Get user by ID error:', err);
-    res.status(500).json({ 
-      success: false,
-      message: 'שגיאה בקבלת פרטי משתמש' 
     });
   }
 };
