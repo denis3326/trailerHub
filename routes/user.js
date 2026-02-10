@@ -1,14 +1,13 @@
-// routes/user.js
 import express from 'express';
-import { getProfile, updateLevel, getUserById } from '../controllers/userController.js'; 
+import { getProfile, updateLevel } from '../controllers/userController.js'; // מחק את getUserById
 
 const router = express.Router();
 
-// Route מוגן עם token (אימות בתוך הפונקציה)
+// כל ה-routes האלה דורשים הרשאה
 router.get('/profile', getProfile);
 router.post('/update-level', updateLevel);
 
-// Route ציבורי (ללא token)
-router.get('/:id', getUserById);
+// אם אתה רוצה route ציבורי, הוסף אותו בנפרד
+// router.get('/:id', getUserById);
 
 export default router;
