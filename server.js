@@ -3,6 +3,7 @@ import cors from 'cors';
 import movies from './routes/movies.js';
 import authRoutes from './routes/auth.js';
 import dotenv from 'dotenv';
+import userRoutes from './routes/user.js';
 
 dotenv.config();
 
@@ -14,7 +15,8 @@ app.use(express.json()); // ⬅️ חובה ל-login/register
 
 // routes
 app.use('/api/movies', movies);
-app.use('/api/auth', authRoutes); // ⬅️ חדש
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes); // ⬅️ חדש
 
 // test route (אופציונלי)
 app.get('/', (req, res) => {
