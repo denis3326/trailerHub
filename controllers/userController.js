@@ -157,3 +157,82 @@ export const updateLevel = async (req, res) => {
     });
   }
 };
+
+// controllers/userController.js - הוסף פונקציה חדשה
+
+export const updateScore = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { score, experience_gained, game_type } = req.body;
+    
+    if (!score || !experience_gained || !game_type) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing fields'
+      });
+    }
+    
+    // עדכון המשתמש
+    const updateRes = await pool.query(
+      `UPDATE users 
+       SET experience = COALESCE(experience, 0) + $1,
+           total_score = COALESCE(total_score, 0) + $2
+       WHERE id = $3
+       RETURNING level, experience, total_score`,
+      [experience_gained, score, userId]
+    );
+    
+    // חישוב רמה חדשה
+    const user = updateRes.rows[0];
+    const levelMapping = {
+      10000: 6,
+      6000: 5,
+      3000: 4,
+      1500: 3,
+      500: 2,
+      0: 1
+    };
+    
+    let newLevel = 1;
+    for (const [exp, level] of Object.entries(levelMapping)) {
+      if (user.experience >= parseInt(exp)) {
+        newLevel = level;
+        break;
+      }
+    }
+    
+    // עדכון רמה
+    await pool.query(
+      `UPDATE users SET level = $1 WHERE id = $2`,
+      [newLevel, userId]
+    );
+    
+    // שמירת היסטוריית משחק (אופציונלי)
+    try {
+      await pool.query(
+        `INSERT INTO game_sessions (user_id, game_type, score, experience_gained)
+         VALUES ($1, $2, $3, $4)`,
+        [userId, game_type, score, experience_gained]
+      );
+    } catch (sessionError) {
+      console.log('Could not save game session:', sessionError.message);
+    }
+    
+    res.json({
+      success: true,
+      message: 'Score updated successfully',
+      user: {
+        level: newLevel,
+        experience: user.experience,
+        total_score: user.total_score
+      }
+    });
+    
+  } catch (err) {
+    console.error('Update score error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating score'
+    });
+  }
+};
