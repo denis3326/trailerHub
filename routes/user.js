@@ -1,5 +1,5 @@
 import express from 'express';
-import { getProfile, updateLevel } from '../controllers/userController.js'; // מחק את getUserById
+import { getProfile, updateLevel, updateScore } from '../controllers/userController.js'; // מחק את getUserById
 
 const router = express.Router();
 
